@@ -1,62 +1,83 @@
-import os
-from typing import Optional
-
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, BackgroundTasks
 from pydantic import BaseModel
-
+from typing import Optional
+import logging
 from telegram import Update, Bot
-from telegram.ext import Dispatcher, MessageHandler, Filters, CommandHandler
+from telegram.ext import Dispatcher, CommandHandler, MessageHandler, Filters
+import telegram
 
-TOKEN = os.environ.get("7468098643:AAGKQOnW206tM59OwONqj0IDhSuEScrBGZo")
+# Включаем логирование
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+logger = logging.getLogger(__name__)
 
+# Ваш токен Telegram API
+TELEGRAM_TOKEN = "7468098643:AAGKQOnW206tM59OwONqj0IDhSuEScrBGZo"
+bot = Bot(token=TELEGRAM_TOKEN)
+
+# Инициализируем FastAPI
 app = FastAPI()
 
+# Инициализируем диспетчер для обработки событий
+dispatcher = Dispatcher(bot, None, workers=0)
+
+
+# Модель для получения данных от вебхука Telegram
 class TelegramWebhook(BaseModel):
-    '''
-    Telegram Webhook Model using Pydantic for request body validation
-    '''
     update_id: int
-    message: Optional[dict]
-    edited_message: Optional[dict]
-    channel_post: Optional[dict]
-    edited_channel_post: Optional[dict]
-    inline_query: Optional[dict]
-    chosen_inline_result: Optional[dict]
-    callback_query: Optional[dict]
-    shipping_query: Optional[dict]
-    pre_checkout_query: Optional[dict]
-    poll: Optional[dict]
-    poll_answer: Optional[dict]
+    message: Optional[dict] = None
+    edited_message: Optional[dict] = None
+    channel_post: Optional[dict] = None
+    edited_channel_post: Optional[dict] = None
 
-def start(update, context):
-    context.bot.send_message(chat_id=update.effective_chat.id, text="I'm a bot, please talk to me!")
 
-def register_handlers(dispatcher):
-    start_handler = CommandHandler('start', start)
-    dispatcher.add_handler(start_handler)
+# Обработчик команды /start
+def start(update: Update, context):
+    chat_id = update.message.chat_id
+    context.bot.send_message(chat_id=chat_id, text="Привет! Я ваш бот!")
 
+
+# Обработчик текстовых сообщений
+def echo(update: Update, context):
+    chat_id = update.message.chat_id
+    text = update.message.text
+    context.bot.send_message(chat_id=chat_id, text=f"Вы сказали: {text}")
+
+
+# Регистрация обработчиков
+dispatcher.add_handler(CommandHandler("start", start))
+dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, echo))
+
+
+# Фоновая задача для обработки обновлений Telegram
+async def process_update(update: dict):
+    update_obj = Update.de_json(update, bot)
+    dispatcher.process_update(update_obj)
+
+
+# Маршрут для обработки вебхуков от Telegram
 @app.post("/webhook")
-def webhook(webhook_data: TelegramWebhook):
-    '''
-    Telegram Webhook
-    '''
-    # Method 1
-    bot = Bot(token=TOKEN)
-    update = Update.de_json(webhook_data.__dict__, bot) # convert the Telegram Webhook class to dictionary using __dict__ dunder method
-    dispatcher = Dispatcher(bot, None, workers=4)
-    register_handlers(dispatcher)
+async def telegram_webhook(update: TelegramWebhook, background_tasks: BackgroundTasks):
+    # Передаем обновление в фоновую задачу для обработки
+    background_tasks.add_task(process_update, update.dict())
+    return {"status": "ok"}
 
-    # handle webhook request
-    dispatcher.process_update(update)
 
-    # Method 2
-    # you can just handle the webhook request here without using python-telegram-bot
-    # if webhook_data.message:
-    #     if webhook_data.message.text == '/start':
-    #         send_message(webhook_data.message.chat.id, 'Hello World')
+# Маршрут для установки вебхука
+@app.get("/set_webhook")
+async def set_webhook():
+    webhook_url = "https://tg-bot-git-main-bookerubks-projects.vercel.app/webhook"  # Укажите ваш URL для вебхука
+    success = bot.set_webhook(webhook_url)
+    if success:
+        return {"message": "Webhook установлен"}
+    else:
+        return {"message": "Не удалось установить webhook"}
 
-    return {"message": "ok"}
 
-@app.get("/")
-def index():
-    return {"message": "Hello World"}
+# Маршрут для удаления вебхука
+@app.get("/delete_webhook")
+async def del_webhook():
+    success = bot.del_webhook()
+    if success:
+        return {"message": "Webhook удален"}
+    else:
+        return {"message": "Не удалось удалить webhook"}
