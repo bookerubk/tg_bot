@@ -1,6 +1,6 @@
 from fastapi import FastAPI, BackgroundTasks
 from .tgBot import process_update, bot
-from models import TelegramWebhook
+from .models import TelegramWebhook
 
 # Инициализируем FastAPI
 app = FastAPI()
