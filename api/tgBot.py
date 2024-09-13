@@ -1,5 +1,5 @@
-from telegram import Update, Bot
-from telegram.ext import Dispatcher, CommandHandler, MessageHandler, Filters
+from telegram import Dispatcher, Update, Bot
+from telegram.ext import CommandHandler, MessageHandler, Filters
 import logging
 
 # Инициализируем бота
