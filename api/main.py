@@ -19,7 +19,7 @@ async def telegram_webhook(update: TelegramWebhook, background_tasks: Background
 # Маршрут для установки вебхука
 @app.get("/set_webhook")
 async def set_webhook():
-    webhook_url = "https://tg-icvi1da20-bookerubks-projects.vercel.app/webhook"  # Укажите ваш URL для вебхука
+    webhook_url = "https://tg-bot-git-main-bookerubks-projects.vercel.app/webhook"  # Укажите ваш URL для вебхука
     success = bot.set_webhook(webhook_url)
     if success:
         return {"message": "Webhook установлен"}
