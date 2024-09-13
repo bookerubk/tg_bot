@@ -1,4 +1,4 @@
-fastapi
+fastapi=0.111.1
 pydantic
 uvicorn
 python-telegram-bot==13.13
