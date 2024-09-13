@@ -5,6 +5,10 @@ from models import TelegramWebhook
 # Инициализируем FastAPI
 app = FastAPI()
 
+@app.get("/")
+def index():
+    return {"message": "Hello World"}
+    
 # Маршрут для обработки вебхуков от Telegram
 @app.post("/webhook")
 async def telegram_webhook(update: TelegramWebhook, background_tasks: BackgroundTasks):
