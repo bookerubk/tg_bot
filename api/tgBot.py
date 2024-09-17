@@ -3,7 +3,7 @@ from telegram.ext import Dispatcher, CommandHandler, MessageHandler, Filters
 import logging
 
 # Инициализируем бота
-TELEGRAM_TOKEN = "7468098643:AAHhUFfJHb9DBsmpCRBwrYZFgTdHWuBYP1o"
+TELEGRAM_TOKEN = ""
 bot = Bot(token=TELEGRAM_TOKEN)
 
 # Инициализируем диспетчер для обработки событий
