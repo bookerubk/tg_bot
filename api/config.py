@@ -1,5 +1,9 @@
-import logging
+import os
+from dotenv import load_dotenv
+from aiogram import Bot, Dispatcher
+from aiogram.fsm.storage.memory import MemoryStorage
 
-# Включаем логирование
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
-logger = logging.getLogger(__name__)
+class Config:
+    BOT_TOKEN = os.getenv('BOT_TOKEN', '')
+    bot = Bot(token=BOT_TOKEN)
+    dp = Dispatcher(storage=MemoryStorage())
